@@ -26,6 +26,14 @@ services:
       - appnet
       - webnet
 
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - webnet
+
 networks:
   appnet:
   webnet:

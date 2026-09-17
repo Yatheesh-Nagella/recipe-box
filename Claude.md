@@ -108,8 +108,9 @@ docker compose up -d --build backend   # rebuild only what changed
 
 - [x] Postgres container running on Pi
 - [x] Caddy reverse proxy running on Pi, exposed via Tailscale Serve
-- [ ] FastAPI backend — models scaffolded, needs CRUD endpoints for
-      recipes, tags, and notes
+- [x] FastAPI backend — CRUD endpoints for recipes, tags, and notes
 - [ ] React frontend — not yet started
-- [ ] Wire backend into Caddyfile routing on Pi
-- [ ] First `git push` → Pi deploy cycle
+- [x] Wire backend into Caddyfile routing on Pi
+- [x] First `git push` → Pi deploy cycle
+
+See `TASKS.md` for granular task tracking.

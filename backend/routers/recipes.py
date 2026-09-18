@@ -18,13 +18,24 @@ def _get_recipe_or_404(recipe_id: uuid.UUID, db: Session) -> models.Recipe:
     return recipe
 
 
+def _with_latest_note(db: Session, recipe: models.Recipe) -> models.Recipe:
+    note = db.scalar(
+        select(models.Note)
+        .where(models.Note.recipe_id == recipe.id, models.Note.superseded_by_id.is_(None))
+        .order_by(models.Note.created_at.desc())
+        .limit(1)
+    )
+    recipe.latest_note = note.content if note else None
+    return recipe
+
+
 @router.post("", response_model=schemas.RecipeOut, status_code=201)
 def create_recipe(recipe: schemas.RecipeCreate, db: Session = Depends(get_db)):
     db_recipe = models.Recipe(**recipe.model_dump(exclude={"status"}), status=recipe.status.value)
     db.add(db_recipe)
     db.commit()
     db.refresh(db_recipe)
-    return db_recipe
+    return _with_latest_note(db, db_recipe)
 
 
 @router.get("", response_model=list[schemas.RecipeOut])
@@ -41,12 +52,13 @@ def list_recipes(
         query = query.join(models.Recipe.tags).where(models.Tag.name == tag)
     if q is not None:
         query = query.where(models.Recipe.title.ilike(f"%{q}%"))
-    return db.scalars(query.order_by(models.Recipe.title)).unique().all()
+    recipes = db.scalars(query.order_by(models.Recipe.title)).unique().all()
+    return [_with_latest_note(db, r) for r in recipes]
 
 
 @router.get("/{recipe_id}", response_model=schemas.RecipeOut)
 def get_recipe(recipe_id: uuid.UUID, db: Session = Depends(get_db)):
-    return _get_recipe_or_404(recipe_id, db)
+    return _with_latest_note(db, _get_recipe_or_404(recipe_id, db))
 
 
 @router.patch("/{recipe_id}", response_model=schemas.RecipeOut)
@@ -59,7 +71,7 @@ def update_recipe(recipe_id: uuid.UUID, update: schemas.RecipeUpdate, db: Sessio
         setattr(db_recipe, field, value)
     db.commit()
     db.refresh(db_recipe)
-    return db_recipe
+    return _with_latest_note(db, db_recipe)
 
 
 @router.delete("/{recipe_id}", status_code=204)
@@ -79,7 +91,7 @@ def attach_tag(recipe_id: uuid.UUID, tag_id: uuid.UUID, db: Session = Depends(ge
         db_recipe.tags.append(db_tag)
         db.commit()
         db.refresh(db_recipe)
-    return db_recipe
+    return _with_latest_note(db, db_recipe)
 
 
 @router.delete("/{recipe_id}/tags/{tag_id}", response_model=schemas.RecipeOut)
@@ -90,4 +102,4 @@ def detach_tag(recipe_id: uuid.UUID, tag_id: uuid.UUID, db: Session = Depends(ge
         db_recipe.tags.remove(db_tag)
         db.commit()
         db.refresh(db_recipe)
-    return db_recipe
+    return _with_latest_note(db, db_recipe)

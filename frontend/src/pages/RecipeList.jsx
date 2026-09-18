@@ -55,17 +55,21 @@ export default function RecipeList() {
       <ul className="recipe-list">
         {recipes.map((r) => (
           <li key={r.id}>
-            <Link to={`/recipes/${r.id}`}>
-              <strong>{r.title}</strong>
-              <span className={`status status-${r.status}`}>{r.status}</span>
-              {r.rating && <span className="rating">{"★".repeat(r.rating)}</span>}
-              <div className="tags">
+            <Link to={`/recipes/${r.id}`} className="recipe-card">
+              <div className="recipe-card-top">
+                <strong>{r.title}</strong>
+                {r.rating && <span className="rating">{"★".repeat(r.rating)}</span>}
+              </div>
+              <div className="recipe-card-meta">
+                <span className={`status status-${r.status}`}>{r.status}</span>
                 {r.tags.map((t) => (
                   <span key={t.id} className="tag">
                     {t.name}
                   </span>
                 ))}
               </div>
+              {r.latest_note && <p className="recipe-card-note">&ldquo;{r.latest_note}&rdquo;</p>}
+              {r.last_made && <span className="recipe-card-date">last made {r.last_made}</span>}
             </Link>
           </li>
         ))}

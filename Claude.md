@@ -62,8 +62,12 @@ Four tables — recipes, tags, recipe_tags (junction), notes:
   cook_count, last_made
 - `tags`: id, name, type (cuisine | ingredient) — reused across recipes
 - `recipe_tags`: many-to-many join between recipes and tags
-- `notes`: id, recipe_id, content, created_at — multiple notes per recipe,
-  never overwrite, always append (this is the modification log)
+- `notes`: id, recipe_id, content, created_at, superseded_by_id — multiple
+  notes per recipe, forming a modification log. A note's `content` is
+  immutable once written; "editing" a note inserts a new row and sets
+  `superseded_by_id` on the old one to point at it. Only rows with
+  `superseded_by_id IS NULL` are "current" — that's what list/detail views
+  show; the superseded chain is available via a history endpoint.
 
 ## Conventions
 

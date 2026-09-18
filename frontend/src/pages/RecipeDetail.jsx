@@ -2,22 +2,91 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   addNote,
-  attachTag,
   deleteRecipe,
-  detachTag,
+  editNote,
+  getNoteHistory,
   getRecipe,
   listNotes,
-  listTags,
 } from "../api";
+
+function NoteItem({ recipeId, note, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(note.content);
+  const [history, setHistory] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function save() {
+    if (!draft.trim()) return;
+    try {
+      const updated = await editNote(recipeId, note.id, draft.trim());
+      onSaved(updated);
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function toggleHistory() {
+    if (history) {
+      setHistory(null);
+      return;
+    }
+    try {
+      const past = await getNoteHistory(recipeId, note.id);
+      setHistory(past.slice(0, -1)); // everything before the current version
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <li>
+      <div className="note-meta">
+        <span className="note-date">{new Date(note.created_at).toLocaleString()}</span>
+        {note.edited && <span className="note-edited">edited</span>}
+      </div>
+      {error && <p className="error">{error}</p>}
+      {editing ? (
+        <div className="note-edit">
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <button onClick={save}>Save</button>
+          <button onClick={() => setEditing(false)}>Cancel</button>
+        </div>
+      ) : (
+        <p>{note.content}</p>
+      )}
+      <div className="note-actions">
+        {!editing && (
+          <button onClick={() => setEditing(true)} className="link-button">
+            Edit
+          </button>
+        )}
+        {note.edited && (
+          <button onClick={toggleHistory} className="link-button">
+            {history ? "Hide history" : "View history"}
+          </button>
+        )}
+      </div>
+      {history && (
+        <ul className="note-history">
+          {history.map((h) => (
+            <li key={h.id}>
+              <span className="note-date">{new Date(h.created_at).toLocaleString()}</span>
+              <p>{h.content}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState(null);
   const [notes, setNotes] = useState([]);
-  const [allTags, setAllTags] = useState([]);
   const [newNote, setNewNote] = useState("");
-  const [tagToAdd, setTagToAdd] = useState("");
   const [error, setError] = useState(null);
 
   function refresh() {
@@ -25,31 +94,20 @@ export default function RecipeDetail() {
     listNotes(id).then(setNotes).catch((e) => setError(e.message));
   }
 
-  useEffect(() => {
-    refresh();
-    listTags().then(setAllTags).catch((e) => setError(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  useEffect(refresh, [id]);
 
   async function handleAddNote(e) {
     e.preventDefault();
     if (!newNote.trim()) return;
-    await addNote(id, newNote.trim());
+    const created = await addNote(id, newNote.trim());
+    setNotes((prev) => [...prev, created]);
     setNewNote("");
-    refresh();
   }
 
-  async function handleAddTag(e) {
-    e.preventDefault();
-    if (!tagToAdd) return;
-    await attachTag(id, tagToAdd);
-    setTagToAdd("");
-    refresh();
-  }
-
-  async function handleRemoveTag(tagId) {
-    await detachTag(id, tagId);
-    refresh();
+  function handleNoteSaved() {
+    // editing swaps the note for a new head with a new id, so refetch
+    // rather than trying to patch it into place by index/id.
+    listNotes(id).then(setNotes).catch((e) => setError(e.message));
   }
 
   async function handleDelete() {
@@ -60,10 +118,6 @@ export default function RecipeDetail() {
 
   if (error) return <p className="error">{error}</p>;
   if (!recipe) return <p>Loading...</p>;
-
-  const availableTags = allTags.filter(
-    (t) => !recipe.tags.some((rt) => rt.id === t.id)
-  );
 
   return (
     <div>
@@ -83,25 +137,15 @@ export default function RecipeDetail() {
         </p>
       )}
 
-      <div className="tags">
-        {recipe.tags.map((t) => (
-          <span key={t.id} className="tag">
-            {t.name}
-            <button onClick={() => handleRemoveTag(t.id)}>&times;</button>
-          </span>
-        ))}
-      </div>
-      <form onSubmit={handleAddTag} className="inline-form">
-        <select value={tagToAdd} onChange={(e) => setTagToAdd(e.target.value)}>
-          <option value="">Add a tag...</option>
-          {availableTags.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} ({t.type})
-            </option>
+      {recipe.tags.length > 0 && (
+        <div className="tags">
+          {recipe.tags.map((t) => (
+            <span key={t.id} className="tag">
+              {t.name}
+            </span>
           ))}
-        </select>
-        <button type="submit">Add</button>
-      </form>
+        </div>
+      )}
 
       <div className="actions">
         <Link className="button" to={`/recipes/${id}/edit`}>
@@ -115,10 +159,7 @@ export default function RecipeDetail() {
       <h2>Notes</h2>
       <ul className="notes">
         {notes.map((n) => (
-          <li key={n.id}>
-            <span className="note-date">{new Date(n.created_at).toLocaleString()}</span>
-            <p>{n.content}</p>
-          </li>
+          <NoteItem key={n.id} recipeId={id} note={n} onSaved={handleNoteSaved} />
         ))}
         {notes.length === 0 && <p>No notes yet.</p>}
       </ul>

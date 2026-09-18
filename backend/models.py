@@ -67,5 +67,8 @@ class Note(Base):
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    superseded_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("notes.id", ondelete="SET NULL"), nullable=True, unique=True
+    )
 
     recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="notes")

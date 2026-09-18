@@ -55,10 +55,6 @@ export function createTag(data) {
   return request("/tags", { method: "POST", body: JSON.stringify(data) });
 }
 
-export function deleteTag(id) {
-  return request(`/tags/${id}`, { method: "DELETE" });
-}
-
 export function listNotes(recipeId) {
   return request(`/recipes/${recipeId}/notes`);
 }
@@ -68,4 +64,15 @@ export function addNote(recipeId, content) {
     method: "POST",
     body: JSON.stringify({ content }),
   });
+}
+
+export function editNote(recipeId, noteId, content) {
+  return request(`/recipes/${recipeId}/notes/${noteId}/edit`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+}
+
+export function getNoteHistory(recipeId, noteId) {
+  return request(`/recipes/${recipeId}/notes/${noteId}/history`);
 }

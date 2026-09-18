@@ -33,12 +33,12 @@ class NoteCreate(BaseModel):
 
 
 class NoteOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: uuid.UUID
     recipe_id: uuid.UUID
     content: str
     created_at: datetime
+    edited: bool = False
+    original_created_at: datetime | None = None
 
 
 class RecipeCreate(BaseModel):
@@ -70,3 +70,4 @@ class RecipeOut(BaseModel):
     cook_count: int
     last_made: date | None
     tags: list[TagOut] = []
+    latest_note: str | None = None

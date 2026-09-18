@@ -2,7 +2,6 @@ import { Link, Route, Routes } from "react-router-dom";
 import RecipeDetail from "./pages/RecipeDetail";
 import RecipeForm from "./pages/RecipeForm";
 import RecipeList from "./pages/RecipeList";
-import Tags from "./pages/Tags";
 import { useTheme } from "./useTheme";
 
 export default function App() {
@@ -15,7 +14,6 @@ export default function App() {
           recipe-box
         </Link>
         <nav>
-          <Link to="/tags">Tags</Link>
           <button onClick={toggleTheme} aria-label="Toggle dark mode">
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </button>
@@ -27,7 +25,6 @@ export default function App() {
           <Route path="/recipes/new" element={<RecipeForm />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/:id/edit" element={<RecipeForm />} />
-          <Route path="/tags" element={<Tags />} />
         </Routes>
       </main>
     </div>

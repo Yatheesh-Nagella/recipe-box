@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { createRecipe, getRecipe, updateRecipe } from "../api";
+import { attachTag, createRecipe, getRecipe, updateRecipe } from "../api";
+import TagPicker from "../components/TagPicker";
 
 const EMPTY = {
   title: "",
@@ -16,11 +17,12 @@ export default function RecipeForm() {
   const editing = Boolean(id);
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);
+  const [tags, setTags] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!editing) return;
-    getRecipe(id).then((r) =>
+    getRecipe(id).then((r) => {
       setForm({
         title: r.title,
         youtube_url: r.youtube_url || "",
@@ -28,8 +30,9 @@ export default function RecipeForm() {
         rating: r.rating ?? "",
         cook_count: r.cook_count,
         last_made: r.last_made || "",
-      })
-    );
+      });
+      setTags(r.tags);
+    });
   }, [id, editing]);
 
   function set(field, value) {
@@ -50,6 +53,12 @@ export default function RecipeForm() {
       const saved = editing
         ? await updateRecipe(id, payload)
         : await createRecipe(payload);
+      if (!editing) {
+        // tags were only picked locally until the recipe existed
+        for (const tag of tags) {
+          await attachTag(saved.id, tag.id);
+        }
+      }
       navigate(`/recipes/${saved.id}`);
     } catch (err) {
       setError(err.message);
@@ -110,6 +119,10 @@ export default function RecipeForm() {
             value={form.last_made}
             onChange={(e) => set("last_made", e.target.value)}
           />
+        </label>
+        <label>
+          Tags
+          <TagPicker recipeId={editing ? id : null} tags={tags} onChange={setTags} />
         </label>
         <button type="submit">{editing ? "Save changes" : "Create recipe"}</button>
       </form>

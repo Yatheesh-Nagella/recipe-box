@@ -3,8 +3,11 @@ import RecipeDetail from "./pages/RecipeDetail";
 import RecipeForm from "./pages/RecipeForm";
 import RecipeList from "./pages/RecipeList";
 import Tags from "./pages/Tags";
+import { useTheme } from "./useTheme";
 
 export default function App() {
+  const [theme, toggleTheme] = useTheme();
+
   return (
     <div className="app">
       <header>
@@ -13,6 +16,9 @@ export default function App() {
         </Link>
         <nav>
           <Link to="/tags">Tags</Link>
+          <button onClick={toggleTheme} aria-label="Toggle dark mode">
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
         </nav>
       </header>
       <main>

@@ -1,9 +1,41 @@
 :root {
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
+  --bg: #ffffff;
+  --fg: #1a1a1a;
   --border: #ccc;
   --muted: #666;
   --accent: #2f6f4f;
+  --surface: #eee;
+  --status-tried-bg: #d4edda;
+  --danger: #c0392b;
+  --rating: goldenrod;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16181c;
+    --fg: #e6e6e6;
+    --border: #3a3d42;
+    --muted: #9aa0a6;
+    --accent: #4fa579;
+    --surface: #2a2d33;
+    --status-tried-bg: #234a34;
+    --danger: #e57373;
+    --rating: #e0b93d;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #16181c;
+  --fg: #e6e6e6;
+  --border: #3a3d42;
+  --muted: #9aa0a6;
+  --accent: #4fa579;
+  --surface: #2a2d33;
+  --status-tried-bg: #234a34;
+  --danger: #e57373;
+  --rating: #e0b93d;
 }
 
 * {
@@ -12,6 +44,12 @@
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+a {
+  color: var(--accent);
 }
 
 .app {
@@ -27,6 +65,12 @@ header {
   padding: 1rem 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.5rem;
+}
+
+header nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .brand {
@@ -59,9 +103,16 @@ button {
   font-size: 0.9rem;
 }
 
+.toolbar select,
+.inline-form select,
+.inline-form input {
+  background: var(--bg);
+  color: inherit;
+}
+
 button.danger {
-  border-color: #c0392b;
-  color: #c0392b;
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .recipe-list {
@@ -86,16 +137,16 @@ button.danger {
   padding: 0.1rem 0.5rem;
   border-radius: 3px;
   font-size: 0.75rem;
-  background: #eee;
+  background: var(--surface);
 }
 
 .status-tried {
-  background: #d4edda;
+  background: var(--status-tried-bg);
 }
 
 .rating {
   margin-left: 0.5rem;
-  color: goldenrod;
+  color: var(--rating);
 }
 
 .tags {
@@ -106,7 +157,7 @@ button.danger {
 }
 
 .tag {
-  background: #eee;
+  background: var(--surface);
   border-radius: 3px;
   padding: 0.1rem 0.5rem;
   font-size: 0.8rem;
@@ -177,6 +228,8 @@ button.danger {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 1rem;
+  background: var(--bg);
+  color: inherit;
 }
 
 .recipe-form button {
@@ -202,5 +255,5 @@ button.danger {
 }
 
 .error {
-  color: #c0392b;
+  color: var(--danger);
 }

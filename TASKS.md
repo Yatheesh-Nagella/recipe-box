@@ -16,18 +16,19 @@ status checklist and project conventions.
 - [x] Caddyfile routes `/api/*` to `backend:8000` without stripping the prefix
 - [x] First Pi deploy cycle (`git pull` + `docker compose up -d --build`)
 - [x] End-to-end verified: Tailscale HTTPS -> Caddy -> backend -> Postgres
-
-## Next
-
-- [ ] React frontend scaffold (`frontend/`)
-- [ ] Frontend: recipe list view (search/filter by status, tag, cuisine, ingredient)
-- [ ] Frontend: recipe detail view (notes log, tags, YouTube link, rating)
-- [ ] Frontend: add/edit recipe form
-- [ ] Frontend: tag management UI
-- [ ] Wire frontend into Caddy routing (`handle /* { reverse_proxy frontend:PORT }`)
-- [ ] Frontend container added to `docker-compose.yml`
+- [x] React frontend scaffold (`frontend/`, Vite + React Router)
+- [x] Frontend: recipe list view (search/filter by status, tag)
+- [x] Frontend: recipe detail view (notes log, tags, YouTube link, rating)
+- [x] Frontend: add/edit recipe form
+- [x] Frontend: tag management UI
+- [x] Frontend containerized (multi-stage build, nginx + SPA fallback)
+- [x] Frontend joined to `caddy_webnet`, added to `docker-compose.yml`
+- [x] Pi restructured for multi-app hosting: static homepage at `/`,
+      recipe-box moved to `/recipe-box/*` (Caddy strips the prefix)
+- [x] Dark/light theme toggle (CSS vars, system-preference default, persisted)
+- [x] Browser tab title fixed ("frontend" -> "recipe-box")
 
 ## Backlog / ideas
 
 - [ ] Recipe search by ingredient text, not just tag match
-- [ ] Bulk tag rename/merge
+- [ ] Bulk tag rename/merge UI

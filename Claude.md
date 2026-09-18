@@ -14,7 +14,13 @@ across multiple cooking attempts.
 - **Frontend**: React
 - **Backend**: FastAPI (Python 3.12)
 - **Database**: PostgreSQL 16
-- **Reverse proxy**: Caddy (routes by path, no public TLS — Tailscale handles HTTPS)
+- **Reverse proxy**: Caddy (routes by path, no public TLS — Tailscale handles HTTPS).
+  The Pi hosts multiple apps under one Tailscale hostname: `/` is a static
+  homepage (lives on the Pi, not in this repo), recipe-box lives under
+  `/recipe-box/*`. Caddy strips the `/recipe-box` prefix before forwarding,
+  so the frontend and backend never see it — the frontend's Vite `base` and
+  the API client derive the prefix from `import.meta.env.BASE_URL`, backend
+  routes stay at `/api/*` internally.
 - **Access**: Tailscale only — this app is never exposed to the public internet
 - **Runtime**: Docker Compose, one container per service
 - **Prod host**: Raspberry Pi 5, headless, reached over Tailscale — deploy target only

@@ -101,6 +101,22 @@ Four tables — recipes, tags, recipe_tags (junction), notes:
 - Flag any security-relevant change explicitly (auth, exposed ports, new
   external dependencies) rather than making it silently.
 
+## Testing and CI
+
+- Backend tests live in `backend/tests/` (pytest + FastAPI `TestClient`) and
+  run against a **real Postgres**, not mocks. `DATABASE_URL` must point at a
+  database whose name ends in `_test` — the suite truncates all tables between
+  tests and `conftest.py` refuses to run otherwise.
+- Local run (throwaway DB + python 3.12 container, nothing touches the app stack):
+  start `postgres:16` with `POSTGRES_DB=recipebox_test` on a scratch Docker
+  network, then run `pytest` in a `python:3.12-slim` container with `backend/`
+  mounted and `DATABASE_URL` set.
+- GitHub Actions (`.github/workflows/ci.yml`) runs on every push: backend
+  pytest (Postgres service container), frontend `npm run lint` + `npm run build`,
+  and `docker compose config` + `docker compose build`.
+- Schema changes: `create_all` never alters an existing table, so a new column
+  needs a manual `ALTER TABLE` on the Pi until migrations (Alembic) exist.
+
 ## Deployment pattern
 
 Local (laptop) → commit → push to GitHub → SSH into Pi → pull → rebuild.
@@ -119,7 +135,7 @@ docker compose up -d --build backend   # rebuild only what changed
 - [x] Postgres container running on Pi
 - [x] Caddy reverse proxy running on Pi, exposed via Tailscale Serve
 - [x] FastAPI backend — CRUD endpoints for recipes, tags, and notes
-- [ ] React frontend — not yet started
+- [x] React frontend — deployed at `/recipe-box/`
 - [x] Wire backend into Caddyfile routing on Pi
 - [x] First `git push` → Pi deploy cycle
 

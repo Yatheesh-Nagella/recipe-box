@@ -33,14 +33,23 @@ status checklist and project conventions.
       on the recipe form, read-only pills on the detail page
 - [x] Warm card-based UI redesign (list cards, note/tag styling, both themes)
 
+- [x] Pi `notes.superseded_by_id` migration applied manually
+- [x] Backend test suite (pytest, real Postgres, 32 tests, `_test`-DB guard)
+- [x] GitHub Actions CI: backend tests, frontend lint + build, compose build
+- [x] Notes order fix: edited notes keep their original position (sorted by
+      `original_created_at`), and the recipe card's `latest_note` is the last
+      note *posted*, not the last edited
+
+## Next
+
+- [ ] Alembic migrations (prerequisite for automated deploys -- `create_all`
+      never alters existing tables)
+- [ ] CD: self-hosted GitHub runner on the Pi (outbound-only, fits
+      Tailscale-only) running `git pull` + `docker compose up -d --build`
+      after CI passes; update the "deploys are manual" line in CLAUDE.md
+
 ## Backlog / ideas
 
 - [ ] Recipe search by ingredient text, not just tag match
 - [ ] Bulk tag rename/merge UI
-
-## Pi migration needed
-
-- [ ] `notes` table on the Pi predates `superseded_by_id` -- run the
-      `ALTER TABLE` migration (see deploy instructions) before/alongside
-      deploying this backend version, since `create_all` won't add columns
-      to an existing table.
+- [ ] Codify the Playwright smoke check as an e2e test

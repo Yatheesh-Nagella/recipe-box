@@ -50,6 +50,23 @@ def _enrich(db: Session, note: models.Note) -> schemas.NoteOut:
     return _to_out(note, edited, original.created_at if edited else None)
 
 
+def current_notes(db: Session, recipe_id: uuid.UUID) -> list[schemas.NoteOut]:
+    """Current (non-superseded) notes in the order they were first posted.
+
+    An edit is a new row, so its own created_at is the edit time; sorting on it
+    would push an edited note below newer ones. Order by the chain's original
+    timestamp instead.
+    """
+    heads = db.scalars(
+        select(models.Note).where(
+            models.Note.recipe_id == recipe_id, models.Note.superseded_by_id.is_(None)
+        )
+    ).all()
+    notes = [_enrich(db, n) for n in heads]
+    notes.sort(key=lambda n: n.original_created_at or n.created_at)
+    return notes
+
+
 @router.post("", response_model=schemas.NoteOut, status_code=201)
 def add_note(recipe_id: uuid.UUID, note: schemas.NoteCreate, db: Session = Depends(get_db)):
     _get_recipe_or_404(recipe_id, db)
@@ -63,13 +80,7 @@ def add_note(recipe_id: uuid.UUID, note: schemas.NoteCreate, db: Session = Depen
 @router.get("", response_model=list[schemas.NoteOut])
 def list_notes(recipe_id: uuid.UUID, db: Session = Depends(get_db)):
     _get_recipe_or_404(recipe_id, db)
-    query = (
-        select(models.Note)
-        .where(models.Note.recipe_id == recipe_id, models.Note.superseded_by_id.is_(None))
-        .order_by(models.Note.created_at)
-    )
-    notes = db.scalars(query).all()
-    return [_enrich(db, n) for n in notes]
+    return current_notes(db, recipe_id)
 
 
 @router.post("/{note_id}/edit", response_model=schemas.NoteOut)

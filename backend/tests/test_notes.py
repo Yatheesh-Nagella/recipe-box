@@ -55,6 +55,28 @@ def test_list_shows_only_current_version_after_edit(client, make_recipe):
     assert notes[0]["edited"] is True
 
 
+def test_editing_an_older_note_keeps_its_position(client, make_recipe):
+    recipe = make_recipe()
+    first = add_note(client, recipe["id"], "first")
+    add_note(client, recipe["id"], "second")
+
+    edit_note(client, recipe["id"], first["id"], "first, corrected")
+
+    notes = client.get(f"/api/recipes/{recipe['id']}/notes").json()
+    assert [n["content"] for n in notes] == ["first, corrected", "second"]
+
+
+def test_latest_note_is_last_posted_not_last_edited(client, make_recipe):
+    recipe = make_recipe()
+    first = add_note(client, recipe["id"], "first")
+    add_note(client, recipe["id"], "second")
+
+    edit_note(client, recipe["id"], first["id"], "first, corrected")
+
+    assert client.get(f"/api/recipes/{recipe['id']}").json()["latest_note"] == "second"
+    assert client.get("/api/recipes").json()[0]["latest_note"] == "second"
+
+
 def test_editing_a_superseded_note_is_rejected(client, make_recipe):
     recipe = make_recipe()
     original = add_note(client, recipe["id"], "draft")

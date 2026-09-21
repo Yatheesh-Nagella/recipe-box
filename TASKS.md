@@ -36,6 +36,9 @@ status checklist and project conventions.
 - [x] Pi `notes.superseded_by_id` migration applied manually
 - [x] Backend test suite (pytest, real Postgres, 32 tests, `_test`-DB guard)
 - [x] GitHub Actions CI: backend tests, frontend lint + build, compose build
+- [x] Notes order fix: edited notes keep their original position (sorted by
+      `original_created_at`), and the recipe card's `latest_note` is the last
+      note *posted*, not the last edited
 
 ## Next
 
@@ -44,8 +47,6 @@ status checklist and project conventions.
 - [ ] CD: self-hosted GitHub runner on the Pi (outbound-only, fits
       Tailscale-only) running `git pull` + `docker compose up -d --build`
       after CI passes; update the "deploys are manual" line in CLAUDE.md
-- [ ] Notes list order: an edited note is a new row, so it sorts by its edit
-      time and jumps below newer notes -- sort by `original_created_at` instead
 
 ## Backlog / ideas
 

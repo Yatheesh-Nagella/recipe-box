@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 import models
 import schemas
 from database import get_db
+from routers.notes import current_notes
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
@@ -19,13 +20,8 @@ def _get_recipe_or_404(recipe_id: uuid.UUID, db: Session) -> models.Recipe:
 
 
 def _with_latest_note(db: Session, recipe: models.Recipe) -> models.Recipe:
-    note = db.scalar(
-        select(models.Note)
-        .where(models.Note.recipe_id == recipe.id, models.Note.superseded_by_id.is_(None))
-        .order_by(models.Note.created_at.desc())
-        .limit(1)
-    )
-    recipe.latest_note = note.content if note else None
+    notes = current_notes(db, recipe.id)
+    recipe.latest_note = notes[-1].content if notes else None
     return recipe
 
 

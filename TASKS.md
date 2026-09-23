@@ -47,13 +47,27 @@ status checklist and project conventions.
       self-hosted runner -- repo is public, so a runner would let any PR run
       code on the Pi. Deploys `origin/main` once GitHub checks pass, with a
       backend healthcheck and both-side health verification after deploy
+- [x] Pi's existing database stamped (`alembic stamp 0001`), running version
+      confirmed at migration `0002`
+- [x] `sudo ./deploy/install.sh` run on the Pi -- systemd timer installed
+      and enabled, first tick completed successfully
+- [x] Branch protection on `main`: require PR + all 4 CI checks, no direct
+      pushes even for the owner. "Require approvals" deliberately left off
+      -- GitHub won't let you approve your own PR, which would have made
+      every PR on this solo repo permanently unmergeable (hit this live)
+- [x] Fixed: `deploy/*.sh` were committed non-executable (`core.fileMode`
+      was `false` on the authoring machine, so `chmod +x` never made it into
+      git) -- caught when `sudo ./deploy/install.sh` failed with "command
+      not found" on the Pi; fixed via `git update-index --chmod=+x`
+- [x] README.md added: full architecture diagram, deployment rationale
+      (pull-based vs. self-hosted runner), security decisions, schema
+      migration story, testing approach
 
 ## Next
 
-- [ ] Run `sudo ./deploy/install.sh` on the Pi and stamp the existing DB
-      (`docker compose run --rm --no-deps backend alembic stamp 0001`)
-- [ ] Turn on branch protection on `main` (require PR + passing checks) --
-      the deployer trusts "merged to main with green CI"
+- [ ] Confirm a full unattended deploy loop: push -> PR -> merge -> Pi
+      deploys within 5 min with zero manual `docker compose` commands
+      (in progress -- see whether this README PR triggered it)
 
 ## Backlog / ideas
 

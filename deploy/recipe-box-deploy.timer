@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for a new recipe-box release
+
+[Timer]
+OnActiveSec=1min
+OnBootSec=2min
+OnUnitInactiveSec=5min
+
+[Install]
+WantedBy=timers.target

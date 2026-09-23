@@ -62,12 +62,14 @@ status checklist and project conventions.
 - [x] README.md added: full architecture diagram, deployment rationale
       (pull-based vs. self-hosted runner), security decisions, schema
       migration story, testing approach
-
-## Next
-
-- [ ] Confirm a full unattended deploy loop: push -> PR -> merge -> Pi
-      deploys within 5 min with zero manual `docker compose` commands
-      (in progress -- see whether this README PR triggered it)
+- [x] Confirmed a full unattended deploy loop with the README PR: merged
+      11:52 CDT, timer deployed `14ba045` at 11:56:58 (next tick, ~5 min
+      later) -- build, migrate, `up -d --wait`, both health checks, done
+      by 11:57:06. Zero manual commands. Verified via `journalctl -u
+      recipe-box-deploy` (the script's own "deploying"/"deployed" log
+      lines, not just the generic systemd start/stop entries) plus
+      `~/.recipe-box-deploy/deployed` and `git rev-parse HEAD` on the Pi
+      both matching the merge commit.
 
 ## Backlog / ideas
 

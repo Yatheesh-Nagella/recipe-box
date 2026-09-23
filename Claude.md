@@ -1,7 +1,10 @@
 # recipe-box
 
 A self-hosted recipe manager deployed on a home Raspberry Pi 5, accessible
-privately via Tailscale.
+privately via Tailscale. For the full infrastructure picture — architecture
+diagram, why the deploy pipeline is built the way it is, security decisions
+made along the way — see [`README.md`](README.md). This file covers
+day-to-day conventions and the data model.
 
 ## Purpose
 
@@ -37,19 +40,25 @@ the change should go through git first.
 ## Project layout
 
 recipe-box/
+├── README.md              # infrastructure/architecture reference
 ├── CLAUDE.md
 ├── TASKS.md
 ├── docker-compose.yml
 ├── .env.example          # placeholder values — real .env is gitignored
+├── .github/workflows/ci.yml
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   ├── main.py
 │   ├── database.py
 │   ├── models.py
-│   └── schemas.py
-└── frontend/
-    └── (React app)
+│   ├── schemas.py
+│   ├── routers/           # recipes.py, tags.py, notes.py
+│   ├── migrations/        # Alembic — see "Testing and CI" below
+│   └── tests/              # pytest, real Postgres
+├── frontend/
+│   └── (React app, Vite)
+└── deploy/                 # pull-based auto-deploy — see "Deployment pattern"
 
 Caddy config lives separately on the Pi in ~/caddy/ — not part of this repo,
 don't touch unless explicitly asked to add a new route.
@@ -152,6 +161,9 @@ is not retried until a new commit lands. Logs: `journalctl -u recipe-box-deploy`
 - [x] FastAPI backend — CRUD endpoints for recipes, tags, and notes
 - [x] React frontend — deployed at `/recipe-box/`
 - [x] Wire backend into Caddyfile routing on Pi
-- [x] First `git push` → Pi deploy cycle
+- [x] Backend test suite + GitHub Actions CI
+- [x] Alembic migrations (replaces `create_all`)
+- [x] Automated deployment: pull-based systemd timer on the Pi, gated on
+      CI passing (see `README.md`)
 
 See `TASKS.md` for granular task tracking.

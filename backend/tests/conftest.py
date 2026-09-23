@@ -1,12 +1,15 @@
+from pathlib import Path
+
 import pytest
+from alembic import command
+from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from database import engine
 
 # The suite truncates every table between tests, so refuse to run against
-# anything that isn't clearly a throwaway test database. This must run before
-# importing main, whose import-time create_all would already touch the DB.
+# anything that isn't clearly a throwaway test database.
 if not (engine.url.database or "").endswith("_test"):
     raise RuntimeError(
         f"Refusing to run tests against database {engine.url.database!r}; "
@@ -14,6 +17,17 @@ if not (engine.url.database or "").endswith("_test"):
     )
 
 from main import app  # noqa: E402
+
+
+@pytest.fixture(scope="session")
+def alembic_cfg():
+    return Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def migrated_schema(alembic_cfg):
+    # Build the schema the same way production does, so migrations are tested too.
+    command.upgrade(alembic_cfg, "head")
 
 
 @pytest.fixture(autouse=True)

@@ -40,13 +40,20 @@ status checklist and project conventions.
       `original_created_at`), and the recipe card's `latest_note` is the last
       note *posted*, not the last edited
 
+- [x] Alembic migrations: 0001 baseline, 0002 adopts the Pi's hand-applied
+      `superseded_by_id` column; backend runs `alembic upgrade head` on start;
+      a test fails if models drift from migrations
+- [x] CD: pull-based deployer (`deploy/deploy.sh` + systemd timer), not a
+      self-hosted runner -- repo is public, so a runner would let any PR run
+      code on the Pi. Deploys `origin/main` once GitHub checks pass, with a
+      backend healthcheck and both-side health verification after deploy
+
 ## Next
 
-- [ ] Alembic migrations (prerequisite for automated deploys -- `create_all`
-      never alters existing tables)
-- [ ] CD: self-hosted GitHub runner on the Pi (outbound-only, fits
-      Tailscale-only) running `git pull` + `docker compose up -d --build`
-      after CI passes; update the "deploys are manual" line in CLAUDE.md
+- [ ] Run `sudo ./deploy/install.sh` on the Pi and stamp the existing DB
+      (`docker compose run --rm --no-deps backend alembic stamp 0001`)
+- [ ] Turn on branch protection on `main` (require PR + passing checks) --
+      the deployer trusts "merged to main with green CI"
 
 ## Backlog / ideas
 

@@ -29,8 +29,8 @@ across multiple cooking attempts.
 
 **Claude Code runs on the laptop, never on the Pi.** The Pi is a deploy target,
 not a dev environment — no live editing, no direct file changes there. Code is
-authored, tested, and committed on the laptop; the Pi only ever runs
-`git pull` + `docker compose up -d --build`. If a task seems to require editing
+authored, tested, and committed on the laptop; the Pi only ever pulls from
+GitHub and runs `docker compose` (automatically, see Deployment pattern). If a task seems to require editing
 files directly on the Pi, stop and flag it instead of doing it — it likely means
 the change should go through git first.
 
@@ -114,21 +114,36 @@ Four tables — recipes, tags, recipe_tags (junction), notes:
 - GitHub Actions (`.github/workflows/ci.yml`) runs on every push: backend
   pytest (Postgres service container), frontend `npm run lint` + `npm run build`,
   and `docker compose config` + `docker compose build`.
-- Schema changes: `create_all` never alters an existing table, so a new column
-  needs a manual `ALTER TABLE` on the Pi until migrations (Alembic) exist.
+- Schema changes go through Alembic (`backend/migrations/`). After changing
+  `models.py`, generate a migration with `alembic revision --autogenerate -m "..."`
+  (against a scratch DB), review it, and commit it. A test fails if the models
+  drift from the migrations. The backend container runs `alembic upgrade head`
+  on start, and tests build their schema through the same migrations. There is
+  no `create_all`.
+- `deploy/test/test_deploy.sh` tests the deploy script against a fake GitHub API
+  and fake docker; it runs in CI together with shellcheck.
 
 ## Deployment pattern
 
-Local (laptop) → commit → push to GitHub → SSH into Pi → pull → rebuild.
-This repo does not run deploy commands itself — deploying is a manual step
-done over SSH once code is pushed:
+Local (laptop) → PR → CI → merge to `main` → the Pi deploys itself.
 
-```bash
-# On the Pi, after code is pushed to GitHub:
-cd ~/recipe-box
-git pull
-docker compose up -d --build backend   # rebuild only what changed
-```
+A systemd timer on the Pi runs `deploy/deploy.sh` every 5 minutes. It fetches
+`origin/main`, waits until every GitHub check on that exact commit has passed,
+then: `docker compose build` → `alembic upgrade head` in a one-off backend
+container (if a migration fails, the old version keeps running) →
+`docker compose up -d --wait` → health checks directly and through Caddy.
+State lives in `~/.recipe-box-deploy/` (`deployed`, `failed`); a failed commit
+is not retried until a new commit lands. Logs: `journalctl -u recipe-box-deploy`.
+
+- It is **pull-based on purpose**. This repo is public, so a self-hosted GitHub
+  runner on the Pi would let anyone's pull request run code on it. The Pi only
+  makes outbound requests; nothing on it is reachable from GitHub.
+- Anything merged to `main` with green CI runs on the Pi, so protect `main` in
+  GitHub (require a PR and passing checks) and treat write access as deploy access.
+- One-time install on the Pi: `sudo ./deploy/install.sh`. A database created
+  before Alembic must first be adopted with
+  `docker compose run --rm --no-deps backend alembic stamp 0001`.
+- Manual fallback: `cd ~/recipe-box && git pull && docker compose up -d --build`.
 
 ## Current status
 

@@ -4,7 +4,7 @@ Description=Check for a new recipe-box release
 [Timer]
 OnActiveSec=1min
 OnBootSec=2min
-OnUnitInactiveSec=5min
+OnUnitInactiveSec=6h
 
 [Install]
 WantedBy=timers.target

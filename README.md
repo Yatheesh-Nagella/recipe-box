@@ -68,7 +68,10 @@ block in the Caddyfile.
 Nothing is deployed by pushing or by SSHing in; deploys only happen because
 the Pi decided, on its own, that it was time to pull.
 
-A systemd timer runs [`deploy/deploy.sh`](deploy/deploy.sh) every 5 minutes.
+A systemd timer runs [`deploy/deploy.sh`](deploy/deploy.sh) every 6 hours
+(`deploy/recipe-box-deploy.timer`, `OnUnitInactiveSec` — relative to when the
+previous run finished, so the four daily checks drift rather than land on
+fixed clock times; use `OnCalendar=` instead if fixed times matter more).
 Each run:
 
 1. Fetches `origin/main` and compares it to what's already deployed.
@@ -80,12 +83,12 @@ Each run:
    backend directly and curls it again through Caddy.
 4. Records the outcome in `~/.recipe-box-deploy/` (`deployed` or `failed`).
    A failed commit is not retried until a newer commit lands — it doesn't
-   loop forever trying the same broken thing every 5 minutes.
+   loop forever trying the same broken thing every cycle.
 
 If step 3's migration fails, it fails *before* `docker compose up` swaps
 the containers, so the previous (working) version just keeps running. A
 `flock` around the whole run stops two deploys from overlapping if one
-ever takes longer than 5 minutes.
+run doesn't finish before the next tick.
 
 ### Why pull, not a GitHub-hosted runner
 

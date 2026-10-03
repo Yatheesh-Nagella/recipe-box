@@ -136,7 +136,7 @@ Four tables — recipes, tags, recipe_tags (junction), notes:
 
 Local (laptop) → PR → CI → merge to `main` → the Pi deploys itself.
 
-A systemd timer on the Pi runs `deploy/deploy.sh` every 5 minutes. It fetches
+A systemd timer on the Pi runs `deploy/deploy.sh` every 6 hours. It fetches
 `origin/main`, waits until every GitHub check on that exact commit has passed,
 then: `docker compose build` → `alembic upgrade head` in a one-off backend
 container (if a migration fails, the old version keeps running) →

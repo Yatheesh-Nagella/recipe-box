@@ -16,6 +16,12 @@ sed -e "s|__USER__|$SUDO_USER|g" -e "s|__REPO_DIR__|$repo_dir|g" \
 install -m 644 "$repo_dir/deploy/recipe-box-deploy.timer" /etc/systemd/system/recipe-box-deploy.timer
 
 systemctl daemon-reload
-systemctl enable --now recipe-box-deploy.timer
+systemctl enable recipe-box-deploy.timer
+# restart, not "enable --now": on a timer that's already active, --now alone
+# does not make it re-read a changed OnUnitInactiveSec etc. from the new unit
+# file -- the old schedule keeps running until the timer is restarted. This
+# makes re-running install.sh after an edit to recipe-box-deploy.timer
+# actually take effect, not just on first install.
+systemctl restart recipe-box-deploy.timer
 echo "installed. next run: systemctl list-timers recipe-box-deploy.timer"
 echo "logs:               journalctl -u recipe-box-deploy -n 50"
